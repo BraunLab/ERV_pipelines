@@ -1,74 +1,140 @@
-# ERV_pipelines
+# ERV\_pipelines
 
-## README
+## Overview
 
-## TL;DR
+This repository provides scripts, reference files, and conda environments required to quantify endogenous retrovirus (ERV) expression from RNA-Seq data. It supports analysis from either BAM or FASTQ input files.
 
-This directory includes a GTEx (Release V10) singularity container of scripts and executables, and 2 folders of GTEx pipeline to be run on either bam or fastq file named accordingly. Each folder contains a workflow bash script and two slurm scripts. This need to be run inside the directory containing experiment files. The bam pipeline using GRCh38 human and bam files is tested and completed on the Farnam HPC cluster at Yale.
+The repository includes two distinct ERV quantification workflows:
 
-## Directory
+* **hQ (hervQuant)**: From the Vincent Lab – [hervQuant GitHub](https://unclineberger.org/vincentlab/resources/)
+* **eNM (ERV NatMed)**: Based on the methodology described in [Braun et al., *Nature Medicine*, 2020](https://www.nature.com/articles/s41591-020-0839-y)
 
-### references
+---
 
-The directory contains a genome fasta file, indices, and genes gtf file for human version GRCh38.p10 (NCBI:GCA_000001405.25). A gene model for the gtf file was made using a script from GTEx. Two other folders of reference indices one for STAR, mapping reads, and RSEM, quantification. This gives the flexibility to change references to a newer version or a different version for other purposes.
+## Directory Structure
 
-## Singularity container
-
-### gtex_rnaseq_v10.sif
-
-This is the singularity container that includes all the necessary helper scripts and programs that need to run the RNA-Seq analysis including STAR, Picard, RNA-SeQC2, and RSEM. The container also has helper scripts to combine the results from individual runs.
-
-**Note: Copy the references and singularity container from "/SAY/standard/braunlab-CC1413-MEDCCC/BraunLab_pipelines/gtex_rnaseq_pipeline_v1". Also, the appropriate folder of scripts is present at the same locations. A copy of the scripts is also available at <https://github.com/BraunLab/gtex_rnaseq_pipeline_v1>.**
-
-## Bash script
-
-### wf_gtex_rnaseq.v1.sh
-
-The bash script contains sequential steps required to do the RNA-Seq analysis from bam to count matrix files for individual bam files. This script takes the input bam file and runs all essential steps including creating an output log file, for the genome version and program version that was run.
-
-## Slurm scripts
-
-Slurm is a scheduler used in Farnam to schedule jobs.
-
-### wf_gtex_rnaseq_joblist.v1.slurm
-
-Farnam uses a dSQ scheduler to serialize jobs. This slurm script will loop through the names of bam files making a joblist txt file, with each line containing the execution of workflow bash script for each bam file. It will submit the joblist to the dSQ scheduler outputting the submission line to run the whole pipeline in serial.
-
-### wf_gtex_rnaseq_aggregate.v1.slurm
-
-This slurm script is used to make result aggregate from RSEM and RNASeQC2 runs using helper scripts.
-
-## Instructions
-
-Download this directory's contents to your destination folder with all the bam files to analyze.
-The first step in the workflow is to run
-
-```bash
-sbatch wf_gtex_rnaseq_joblist.v1.slurm
+```
+ERV_pipelines/
+├── eNM_ref/                  # Reference files for eNM pipeline (hg19, Bowtie2 + HTSeq)
+├── erv-pipe.yml             # Conda environment YAML for eNM pipeline
+├── hQ_ref/                  # Reference files for hQ pipeline (hg19, STAR + Salmon)
+├── README.md
+├── wf_erv_natmed.bam.v1.sh  # eNM pipeline (BAM input)
+├── wf_erv_natmed.fq.v1.sh   # eNM pipeline (FASTQ input)
+├── wf_hervQuant.bam.v1.sh   # hQ pipeline (BAM input)
+├── wf_hervQuant.fq.v1.sh    # hQ pipeline (FASTQ input)
+└── wf_joblist.v1.sh         # Submission helper script
 ```
 
-This step will create a joblist file and submit it to dSQ serial job submission script with a date of the run.
-e.g. dsq-joblist-2022-09-14.sh
-It will output a message for the exact command to run.
+---
+
+## Reference Directories
+
+### `hQ_ref/`
+
+Contains all reference files based on **hg19**, required to:
+
+* Align reads using **STAR**
+* Quantify expression using **Salmon**
+
+### `eNM_ref/`
+
+Contains all reference files based on **hg19**, required to:
+
+* Align reads using **Bowtie2**
+* Quantify expression using **HTSeq**
+
+---
+
+## Conda Environment Setup
+
+To run the **eNM** pipeline, set up the conda environment as follows:
+
+```bash
+conda env create -f erv-pipe.yml --name erv-pipe
+```
+
+Activate it before running the pipeline:
+
+```bash
+conda activate erv-pipe
+```
+
+---
+
+## Workflow Scripts
+
+Choose the appropriate script depending on whether your input is in **BAM** or **FASTQ** format.
+
+### eNM Pipeline
+
+* `wf_erv_natmed.bam.v1.sh`
+* `wf_erv_natmed.fq.v1.sh`
+
+### hQ Pipeline
+
+* `wf_hervQuant.bam.v1.sh`
+* `wf_hervQuant.fq.v1.sh`
+
+---
+
+## Running the Pipelines
+
+### 1. Set Up
+
+Download or clone the repository into the same folder containing your BAM or FASTQ files.
+
+Repository location on Farnam (Yale HPC):
+`/gpfs/gibbs/pi/braun/workflows/ERV`
+
+GitHub:
+[https://github.com/BraunLab/ERV\_pipelines](https://github.com/BraunLab/ERV_pipelines)
+
+---
+
+### 2. Submit the Job List
+
+```bash
+sbatch wf_joblist.v1.sh
+```
+
+This generates a submission script (e.g., `dsq-joblist-2022-09-14.sh`) using [dSQ](https://docs.ycrc.yale.edu/clusters-at-yale/job-scheduling/dsq/) for batch scheduling.
+
+You will see a message indicating the generated submission file. Then run:
 
 ```bash
 sbatch dsq-joblist-2022-09-14.sh
 ```
 
-This block of code will run the workflow on all the bam files with available resources in Farnam with a "jobid". To check the progress of the run the code block is below. It will give you the status of the progress.
+---
+
+### 3. Monitor Job Progress
 
 ```bash
 module load dSQ
 dsqa -j <jobid>
 ```
 
-If the run fails due to resource unavailability. If you haven't loaded the dSQ module load it again and run the code block below. That should rerun all the jobs that failed.
-Please refer to <https://docs.ycrc.yale.edu/clusters-at-yale/job-scheduling/dsq/> to learn more about dSQ.
+Replace `<jobid>` with your actual job ID.
+
+---
+
+### 4. Rerun Failed Jobs (if any)
+
+If jobs fail due to resource issues:
 
 ```bash
-#module load dSQ
+module load dSQ
 dsqa -j <jobid> -f jobsfile.txt > re-run_jobs.txt 2> <jobid>_report.txt
+
 dsq --job-file re-run_jobs.txt --time=2-00:00:00 --cpus-per-task=5 --mem=35G --mail-type=ALL
 ```
 
-Please feel free to contact me for any further queries  **deepak(dot)poduval(at)yale(dot)edu**
+For more information, visit the [Yale dSQ documentation](https://docs.ycrc.yale.edu/clusters-at-yale/job-scheduling/dsq/).
+
+---
+
+## Questions or Support
+
+For questions, feedback, or assistance, please contact:
+📧 **deepak(dot)poduval(at)yale(dot)edu**

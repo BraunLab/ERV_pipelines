@@ -15,7 +15,8 @@
 path=`pwd`
 
 in=$1
-n=${in%.A*}
+
+n=${in%.b*}
 
 ##Path and name for the results folder
 out="$path/hervQuant_results"

@@ -7,9 +7,7 @@ ml miniconda Java/1.8.345
 conda activate erv-pipe
 
 ##Path of the working folder
-#path="/home/dp935/palmer_scratch/ERV/DepMap_CCLE"
 path=`pwd`
-#bam=$1
 
 # Check if the folder name is provided as an argument
 if [ $# -eq 0 ]; then
@@ -41,7 +39,7 @@ fi
 fR2=$prefix"_R2_001.fastq.gz"
 
 ##Path to folder with all the references
-reference="/home/dp935/project/ERVtools/erv-pipe/hg19/terra"
+reference=$path/eNM_ref
 
 ## need to have the bai index file for bam file before sorting
 ## if no bai file, run the following command

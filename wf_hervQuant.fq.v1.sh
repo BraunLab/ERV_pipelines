@@ -65,6 +65,7 @@ echo "STAR Version: 2.7.8a">>$log
 echo "Samtools Version: 1.16.1" >>$log
 echo "Salmon Version: 1.4.0 " >>$log
 
+
 ##------------------------------------------------------------------------------------------------------------------------------------------
 ##
 # The Workflow block creates from BAM/FASTQ to Salmon Matrix

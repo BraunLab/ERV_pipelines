@@ -4,12 +4,13 @@ module purge
 
 ml miniconda Java/1.8.345
 
+#make sure you create conda environment using yaml file provided
 conda activate erv-pipe
 
 ##Path of the working folder
 path=`pwd`
 bam=$1
-prefix=${bam%.A*}
+prefix=${bam%.b*}
 
 ##Path and name for the results folder
 out="$path/erv_natmed_results"
