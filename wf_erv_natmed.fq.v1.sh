@@ -21,7 +21,7 @@ fR1=$1
 prefix=${fR1%_R*}
 
 ##Path and name for the results folder
-out="/gpfs/gibbs/pi/braun/ERV/CM025/erv_natmed_results"
+out="$path/erv_natmed_results"
 
 ##Crosscheck whether the folder was created
 if [ ! -d "$out" ]; then
@@ -48,7 +48,7 @@ reference=$path/eNM_ref
 #samtools sort -@ ${SLURM_CPUS_PER_TASK} -n -o $op".sorted_by_name.bam" $bam
 
 # 2. run python script, convert bam to Fastq files, 3 outputs: pair1.fq, pair2.fq & single.fq
-#python /home/dp935/project/ERVtools/erv-pipe/write2fq.py $op".sorted_by_name.bam"
+#python $reference/write2fq.py $op".sorted_by_name.bam"
 #echo "2. write2fq.py :"
 #ls -lhtr $DIR
 #echo " make sure single.fq is empty"
@@ -67,7 +67,7 @@ ls -lhtr $DIR/
 rm $DIR/human_index.*.bt2
 
 # 4. run python script, to filter out pair-end perfectly matched and pair-end 1 mismatched alignments to human transcripts reference. 2 outputs: properpair_keep.sam (keep bad alignments) & properpair_filtered.sam (filtered out pair-end pm and 1mm alignments) 
-python /home/dp935/project/ERVtools/erv-pipe/filter_humanX.py $DIR/
+python $reference/filter_humanX.py $DIR/
 # delete pair1.fq, pair2.fq and single.fq
 echo "4. filter out humanX alignments :"
 ls -lhtr $DIR/
@@ -95,7 +95,7 @@ rm $DIR/properpair_filtered.sam
 rm $DIR/properpair_keep.sam
 
 # 7. convert the alignment_merge_byname.sam into fastq files: herv1.fq, herv2.fq, and hervS.fq (single)
-python /home/dp935/project/ERVtools/erv-pipe/write2fq_human.py $DIR/
+python $reference/write2fq_human.py $DIR/
 echo "7. write2fq_human.py :"
 ls -lhtr $DIR/
 echo "Make sure the number of lines in hervS.fq is zero!"
@@ -121,7 +121,7 @@ ls -lhtr $DIR/
 rm $DIR/alignment.sam
 
 # 10. filtering 2 conditions from pair-end and 1 condition from single-end 
-python /home/dp935/project/ERVtools/erv-pipe/filter_alignments_hervquant.py $DIR/
+python $reference/filter_alignments_hervquant.py $DIR/
 echo "10. filter_alignments_hervquant.py :"
 ls -lhtr $DIR/
 rm $DIR/properpair.sam
@@ -139,7 +139,7 @@ comm -23 $DIR/single_pm_old_names.txt $DIR/single_filtered_names.txt > $DIR/sing
 # sort single_pm_old.sam by name
 samtools sort -n -o $DIR/single_pm_sorted.sam $DIR/single_pm_old.sam
 # run python script to filter out common names between single_pm_old_names and single_filtered_names ( or only save the reads in single_pm.txt)
-python /home/dp935/project/ERVtools/erv-pipe/filter_single.py $DIR/
+python $reference/filter_single.py $DIR/
 echo "11. filter_single.py :"
 ls -lhtr $DIR
 
@@ -160,7 +160,7 @@ samtools flagstat $DIR/alignment_merge_byname.sam > $DIR/stats.txt
 rm $DIR/alignment_merge_byname.sam
 
 # 13. count reads
-python /home/dp935/project/ERVtools/erv-pipe/count_reads_hervquant.py $DIR/
+python $reference/count_reads_hervquant.py $DIR/
 #echo "13. count_reads_hervquant.py :"
 ls -lhtr $DIR
 rm $DIR/*_count.sam
@@ -178,13 +178,13 @@ samtools sort -o $DIR/properpair_1mm.sortbycoord.sam $DIR/properpair_1mm.sam
 samtools sort -o $DIR/single_pm.sortbycoord.sam $DIR/single_pm.sam
 
 # then change flags: for properpair_pm and _1mm, turn off flags for "256:secondary alignment" and "2048:supplementary alignment". For single_pm, turn off all flags with "pair" or "mate" as well as secondary and supplementary flags. And then also change RNEXT="*", PNEXT="0" and TLEN="0".
-python /home/dp935/project/ERVtools/erv-pipe/change_read_flags.py $DIR/
+python $reference/change_read_flags.py $DIR/
 # then remove duplictes 
-java -jar /home/dp935/project/ERVtools/erv-pipe/picard.jar MarkDuplicates I=$DIR/properpair_pm.sortbycoord.changeflag.sam O=$DIR/properpair_pm.rmdup.sam M=$DIR/properpair_pm.metrics.txt ASO=coordinate REMOVE_DUPLICATES=TRUE
+java -jar $reference/picard.jar MarkDuplicates I=$DIR/properpair_pm.sortbycoord.changeflag.sam O=$DIR/properpair_pm.rmdup.sam M=$DIR/properpair_pm.metrics.txt ASO=coordinate REMOVE_DUPLICATES=TRUE
 
-java -jar /home/dp935/project/ERVtools/erv-pipe/picard.jar MarkDuplicates I=$DIR/properpair_1mm.sortbycoord.changeflag.sam O=$DIR/properpair_1mm.rmdup.sam M=$DIR/properpair_1mm.metrics.txt ASO=coordinate REMOVE_DUPLICATES=TRUE
+java -jar $reference/picard.jar MarkDuplicates I=$DIR/properpair_1mm.sortbycoord.changeflag.sam O=$DIR/properpair_1mm.rmdup.sam M=$DIR/properpair_1mm.metrics.txt ASO=coordinate REMOVE_DUPLICATES=TRUE
 
-java -jar /home/dp935/project/ERVtools/erv-pipe/picard.jar MarkDuplicates I=$DIR/single_pm.sortbycoord.changeflag.sam O=$DIR/single_pm.rmdup.sam M=$DIR/single_pm.metrics.txt ASO=coordinate REMOVE_DUPLICATES=TRUE
+java -jar $reference/picard.jar MarkDuplicates I=$DIR/single_pm.sortbycoord.changeflag.sam O=$DIR/single_pm.rmdup.sam M=$DIR/single_pm.metrics.txt ASO=coordinate REMOVE_DUPLICATES=TRUE
 # sort the rmdup.sam by name for faster HTSeq-count and less memory buffer
 # Note: I replaced the properpair_pm.sam(removed duplicates, sort by name)  with old ones (keep duplicates, sort by name)
 samtools sort -n -o $DIR/properpair_pm.sam $DIR/properpair_pm.rmdup.sam
@@ -214,7 +214,7 @@ htseq-count --stranded=no --mode=union --nonunique=all --secondary-alignments=sc
 ls -lhtr $DIR
 
 # 16. count reads
-python /home/dp935/project/ERVtools/erv-pipe/count_reads_hervquant.py $DIR/
+python $reference/count_reads_hervquant.py $DIR/
 echo "16. count_reads_hervquant.py for remove duplicates:"
 ls -lhtr $DIR
 rm $DIR/properpair_pm.sam
