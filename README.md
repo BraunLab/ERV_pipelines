@@ -84,7 +84,7 @@ Choose the appropriate script depending on whether your input is in **BAM** or *
 
 Download or clone the repository into the same folder containing your BAM or FASTQ files.
 
-Repository location on Farnam (Yale HPC):
+Repository location on McLeary (Yale HPC):
 `/gpfs/gibbs/pi/braun/workflows/ERV`
 
 GitHub:
