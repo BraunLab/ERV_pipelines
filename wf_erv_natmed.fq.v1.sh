@@ -18,6 +18,7 @@ fi
 # Define the expected file name
 fR1=$1
 
+##Please make sure your sample fastq files ar in folder and has R1 and R2 for read 1 and 2. If not not update accordingly. if it is R001 change R1 to R001
 prefix=${fR1%_R*}
 
 ##Path and name for the results folder

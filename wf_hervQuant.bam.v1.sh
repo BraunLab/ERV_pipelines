@@ -16,7 +16,8 @@ path=`pwd`
 
 in=$1
 
-n=${in%.b*}
+##Please edit the extension based on the file names for example if the file extension has Aligned.coordsorted.bam instead of *.b you should use *.A
+n=${in%.A*}
 
 ##Path and name for the results folder
 out="$path/hervQuant_results"

@@ -10,6 +10,8 @@ conda activate erv-pipe
 ##Path of the working folder
 path=`pwd`
 bam=$1
+
+##Please edit the extension based on the file names for example if the file extension has Aligned.coordsorted.bam instead of *.b you should use *.A
 prefix=${bam%.b*}
 
 ##Path and name for the results folder

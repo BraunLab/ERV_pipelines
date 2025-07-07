@@ -28,6 +28,7 @@ reference=$path/hQ_ref/
 ##Takes input sample folder name as a command line argument
 in_dir=$1
 
+##Please make sure your sample fastq files ar in folder and has R1 and R2 for read 1 and 2. If not not update accordingly. if it is R001 change R1 to R001
 for f in $in_dir/*R1*gz
 do
 	fR1=$f
